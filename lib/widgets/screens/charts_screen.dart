@@ -15,9 +15,9 @@ class ChartsScreen extends StatefulWidget {
 }
 
 class _ChartsScreenState extends State<ChartsScreen> {
-  List<LearnTimesBucket> get _currentWeekBucket {
-    DateTime startOfWeek = DateTime.now().subtract(
-      Duration(days: DateTime.now().weekday == 7 ? 0 : DateTime.now().weekday),
+  List<LearnTimesBucket> _currentWeekBucket(DateTime date) {
+    DateTime startOfWeek = date.subtract(
+      Duration(days: date.weekday == 7 ? 0 : date.weekday),
     );
 
     List<LearnTimesBucket> list = [];
@@ -42,17 +42,23 @@ class _ChartsScreenState extends State<ChartsScreen> {
         child: Column(
           children: [
             SizedBox(height: 10),
-            SingleColorChart(
-              buckets: widget.appState.widget.categoryBuckets.values.toList(),
-              dateType: widget.appState.dateType,
+            Card.filled(
+              child: SingleColorChart(
+                buckets: widget.appState.widget.categoryBuckets.values.toList(),
+                dateType: widget.appState.dateType,
+              ),
             ),
-            MultiColorChart(
-              buckets: _currentWeekBucket,
-              dateType: widget.appState.dateType,
+            Card.filled(
+              child: MultiColorChart(
+                buckets: _currentWeekBucket(DateTime.now()),
+                dateType: widget.appState.dateType,
+              ),
             ),
-            SingleColorChart(
-              buckets: _currentWeekBucket,
-              dateType: widget.appState.dateType,
+            Card.filled(
+              child: SingleColorChart(
+                buckets: _currentWeekBucket(DateTime.now()),
+                dateType: widget.appState.dateType,
+              ),
             ),
           ],
         ),

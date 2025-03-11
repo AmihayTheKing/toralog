@@ -1,11 +1,12 @@
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:kosher_dart/kosher_dart.dart';
+import 'package:zman_limud_demo/hebrewDatePicker/theme.dart';
 import 'package:zman_limud_demo/util/category.dart';
 import 'package:zman_limud_demo/models/learn_time.dart';
 import 'package:zman_limud_demo/main.dart';
 import 'package:zman_limud_demo/util/general_util.dart';
-import 'package:material_hebrew_date_picker/material_hebrew_date_picker.dart';
+import 'package:zman_limud_demo/hebrewDatePicker/material_hebrew_date_picker.dart';
 
 class EditMenu extends StatefulWidget {
   const EditMenu({super.key, required this.appState, required this.learnTime});
@@ -31,13 +32,6 @@ class _EditMenuState extends State<EditMenu> {
 
   void _submit() async {
     bool ifReturn = false;
-
-    if (_category == null) {
-      setState(() {
-        categoryErrorText = 'קלט לא תקין';
-      });
-      return;
-    }
 
     if (_titleController.text.isEmpty) {
       await showDialog(
@@ -77,7 +71,7 @@ class _EditMenuState extends State<EditMenu> {
         startTime: _pickedStartTime,
         endTime: _pickedEndTime,
         date: _pickedDate,
-        category: _category ?? widget.learnTime.category,
+        category: _category,
       ),
     );
     Navigator.pop(context);
@@ -104,8 +98,8 @@ class _EditMenuState extends State<EditMenu> {
   void _chooseDateGregorian() async {
     _pickedDate = (await showDatePicker(
           context: context,
-          initialDate: DateTime.now(),
-          firstDate: DateTime(DateTime.now().year - 1),
+          initialDate: _pickedDate,
+          firstDate: DateTime(_pickedDate.year - 1),
           lastDate: DateTime.now(),
         )) ??
         DateTime.now();
@@ -115,20 +109,38 @@ class _EditMenuState extends State<EditMenu> {
   void _chooseDateJewish() async {
     await showMaterialHebrewDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(DateTime.now().year - 1),
+      initialDate: _pickedDate,
+      firstDate: _pickedDate.subtract(Duration(days: 30)),
       lastDate: DateTime.now().add(Duration(days: 30)),
       hebrewFormat: true,
       onConfirmDate: (date) {
         setState(() => _pickedDate = date);
       },
       onDateChange: (DateTime value) {},
-      /*theme: HebrewDatePickerTheme(
-        colorScheme: ColorScheme.light(
-          primary: Theme.of(context).colorScheme.primary,
-          onPrimary: Theme.of(context).colorScheme.onPrimary,
+      theme: HebrewDatePickerTheme(
+        primaryColor: Theme.of(context).colorScheme.primary,
+        onPrimaryColor: Theme.of(context).colorScheme.onPrimary,
+        surfaceColor: Theme.of(context).colorScheme.surface,
+        onSurfaceColor: Theme.of(context).colorScheme.onSurface,
+        disabledColor:
+            Theme.of(context).colorScheme.onSurface.withOpacity(0.38),
+        selectedColor: Theme.of(context).colorScheme.primary,
+        todayColor: Theme.of(context).colorScheme.primary,
+        headerTextStyle: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.primary,
         ),
-      ),*/
+        bodyTextStyle: TextStyle(
+          fontSize: 14,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+        weekdayTextStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
     );
   }
 
@@ -333,7 +345,7 @@ class _EditMenuState extends State<EditMenu> {
                 onPressed: () {
                   _submit();
                 },
-                child: Text('הוסף'),
+                child: Text('עדכן'),
               ),
             ),
           ],

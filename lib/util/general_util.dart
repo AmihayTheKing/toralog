@@ -16,12 +16,6 @@ final HebrewDateFormatter jewishDateFormat = HebrewDateFormatter()
   ..useFinalFormLetters = true;
 final DateFormat onlyHourDateFormat = DateFormat.Hm();
 
-class GeneralUtil {
-  // static String getFormattedDateForChart(JewishDate jewishDate) {
-  //   return '${jewishDateFormat.format(jewishDate).substring(0, jewishDateFormat.format(jewishDate).indexOf(' ') + 3)}${jewishDate.getJewishMonth() != 5 ? '\'' : ''}';
-  // }
-}
-
 extension DateTimeExtenson on DateTime {
   bool isSameDate(DateTime other) {
     return year == other.year && month == other.month && day == other.day;

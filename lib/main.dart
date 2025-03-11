@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:zman_limud_demo/data/learn_times.dart';
 import 'package:zman_limud_demo/models/learn_times_bucket.dart';
 import 'package:zman_limud_demo/themes/dark_theme.dart';
-import 'package:zman_limud_demo/util/dummy_data.dart';
 import 'package:zman_limud_demo/util/general_util.dart';
 import 'package:zman_limud_demo/widgets/add_menu.dart';
 import 'package:zman_limud_demo/widgets/edit_menu.dart';
@@ -14,12 +14,16 @@ import 'package:zman_limud_demo/themes/light_theme.dart';
 import 'package:zman_limud_demo/util/category.dart';
 
 void main() {
-  runApp(
-    MaterialApp(
-      theme: lightTheme,
-      darkTheme: darkTheme,
-      debugShowCheckedModeBanner: false,
-      home: App(),
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations(
+      [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]).then(
+    (fn) => runApp(
+      MaterialApp(
+        theme: lightTheme,
+        darkTheme: darkTheme,
+        debugShowCheckedModeBanner: false,
+        home: App(),
+      ),
     ),
   );
 }
@@ -27,7 +31,7 @@ void main() {
 class App extends StatefulWidget {
   App({super.key});
 
-  List<LearnTime> learnTimes = [...dummyLearnTimes];
+  List<LearnTime> learnTimes = [];
   Map<Category, LearnTimesBucket> categoryBuckets = Map.fromIterable(
       Category.values,
       value: (category) => LearnTimesBucket(countedThing: category));
@@ -89,8 +93,6 @@ class AppState extends State<App> {
   }
 
   void removeLearnTime(LearnTime learnTime) async {
-    final int index = widget.learnTimes.indexOf(learnTime);
-
     try {
       // Delete from database
       await LearnTimeDatabase().delete(learnTime);
@@ -106,23 +108,9 @@ class AppState extends State<App> {
           content: Text('הלימוד ${learnTime.title} נמחק בהצלחה'),
           action: SnackBarAction(
             label: 'ביטול',
-            onPressed: () async {
-              // Revert deletion by reinserting into database and local state
-              await LearnTimeDatabase().create(learnTime);
-              setState(
-                () {
-                  if (index > widget.learnTimes.length) {
-                    widget.learnTimes.add(learnTime);
-                  } else {
-                    widget.learnTimes.insert(index, learnTime);
-                  }
-                  widget.categoryBuckets[learnTime.category]
-                      ?.addLearnTime(learnTime);
-
-                  // Reinsert into date buckets
-                },
-              );
-            },
+            onPressed: () => setState(
+              () => addLearnTime(learnTime),
+            ),
           ),
         ),
       );
@@ -161,6 +149,7 @@ class AppState extends State<App> {
 
       setState(() {
         widget.learnTimes[widget.learnTimes.indexOf(learnTime)] = learnTime;
+        widget.learnTimes.sort((a, b) => b.date.compareTo(a.date));
         widget.categoryBuckets[learnTime.category]?.updateLearnTime(learnTime);
       });
     } catch (e) {
