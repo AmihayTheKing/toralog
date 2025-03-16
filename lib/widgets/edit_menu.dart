@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:kosher_dart/kosher_dart.dart';
@@ -34,6 +37,30 @@ class _EditMenuState extends State<EditMenu> {
     bool ifReturn = false;
 
     if (_titleController.text.isEmpty) {
+      if (Platform.isIOS) {
+        await showCupertinoDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            content: Text('אתה בטוח שאתה לא רוצה להוסיף כותרת?'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  ifReturn = true;
+                },
+                child: Text('בטל'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                },
+                child: Text('אישור'),
+              ),
+            ],
+          ),
+        );
+      }
+
       await showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
