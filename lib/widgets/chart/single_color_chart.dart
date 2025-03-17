@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:kosher_dart/kosher_dart.dart';
 import 'package:zman_limud_demo/util/general_util.dart';
 import 'package:zman_limud_demo/widgets/chart/single_color_chart_bar.dart';
 import 'package:zman_limud_demo/models/learn_times_bucket.dart';
@@ -7,10 +6,14 @@ import 'package:zman_limud_demo/util/category.dart';
 
 class SingleColorChart extends StatelessWidget {
   const SingleColorChart(
-      {super.key, required this.buckets, required this.dateType});
+      {super.key,
+      required this.buckets,
+      required this.dateType,
+      required this.onBarTap});
 
   final List<LearnTimesBucket> buckets;
   final DateType dateType;
+  final void Function(Category) onBarTap;
 
   double get maxTotalExpense {
     double maxTotalExpense = 0;
@@ -40,7 +43,7 @@ class SingleColorChart extends StatelessWidget {
             Expanded(
               child: InkWell(
                 borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-                onTap: () {},
+                onTap: () => onBarTap(bucket.countedThing),
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -53,28 +56,11 @@ class SingleColorChart extends StatelessWidget {
                           : bucket.amount / maxTotalExpense,
                     ),
                     SizedBox(height: 8),
-                    bucket.countedThing is Category
-                        ? Text(
-                            '${categoryChartLabels[bucket.countedThing]}',
-                            textDirection: TextDirection.rtl,
-                            textAlign: TextAlign.center,
-                          )
-                        : dateType == DateType.jewish
-                            ? Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 1),
-                                child: Text(
-                                  JewishDate.fromDateTime(bucket.countedThing)
-                                      .getFormattedDateForChart(),
-                                  style: TextStyle().copyWith(fontSize: 11.5),
-                                  textDirection: TextDirection.rtl,
-                                  textAlign: TextAlign.center,
-                                ),
-                              )
-                            : Text(
-                                dateFormatForChart.format(bucket.countedThing),
-                                textAlign: TextAlign.center,
-                              ),
+                    Text(
+                      '${categoryChartLabels[bucket.countedThing]}',
+                      textDirection: TextDirection.rtl,
+                      textAlign: TextAlign.center,
+                    )
                   ],
                 ),
               ),

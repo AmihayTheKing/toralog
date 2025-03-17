@@ -6,10 +6,14 @@ import 'package:zman_limud_demo/models/learn_times_bucket.dart';
 
 class MultiColorChart extends StatelessWidget {
   const MultiColorChart(
-      {super.key, required this.buckets, required this.dateType});
+      {super.key,
+      required this.buckets,
+      required this.dateType,
+      required this.onBarTap});
 
   final List<LearnTimesBucket> buckets;
   final DateType dateType;
+  final void Function(DateTime) onBarTap;
 
   double get maxTotalExpense {
     double maxTotalExpense = 0;
@@ -40,7 +44,7 @@ class MultiColorChart extends StatelessWidget {
             Expanded(
               child: InkWell(
                 borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-                onTap: () {},
+                onTap: () => onBarTap(bucket.countedThing),
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
                   crossAxisAlignment: CrossAxisAlignment.stretch,

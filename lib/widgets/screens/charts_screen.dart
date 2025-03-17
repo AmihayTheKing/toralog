@@ -37,59 +37,86 @@ class _ChartsScreenState extends State<ChartsScreen> {
     return map;
   }
 
-  void showDayData(DateTime date) {
+  void changeDateChartData(DateTime date) {
     setState(() => _dateOfDisplayedData = date);
   }
 
-  void showCategoryData(Category category) {
+  void changeCategoryChartData(Category category) {
     setState(() => _categoryOfDisplayedData = category);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(
-            bottom: 90,
-          ),
-          child: Column(
-            children: [
-              SizedBox(height: 10),
-              Card.filled(
-                child: Column(
-                  children: [
-                    Text(widget
-                        .appState
-                        .widget
-                        .categoryBuckets[_categoryOfDisplayedData]!
-                        .formmettedAmount),
-                    SingleColorChart(
-                      buckets: widget.appState.widget.categoryBuckets.values
-                          .toList(),
-                      dateType: widget.appState.dateType,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.only(
+          bottom: 90,
+        ),
+        child: Column(
+          children: [
+            SizedBox(height: 10),
+            Card.filled(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 4,
+                      horizontal: 8,
                     ),
-                  ],
-                ),
-              ),
-              Card.filled(
-                child: Column(
-                  children: [
-                    Text(_currentWeekBucket(
-                            _dateOfDisplayedData)[_dateOfDisplayedData]!
-                        .formmettedAmount),
-                    MultiColorChart(
-                      buckets: _currentWeekBucket(
-                        DateTime.now(),
-                      ).values.toList(),
-                      dateType: widget.appState.dateType,
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        widget
+                            .appState
+                            .widget
+                            .categoryBuckets[_categoryOfDisplayedData]!
+                            .formmettedAmount,
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
+                        textDirection: TextDirection.rtl,
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                  SingleColorChart(
+                    onBarTap: changeCategoryChartData,
+                    buckets:
+                        widget.appState.widget.categoryBuckets.values.toList(),
+                    dateType: widget.appState.dateType,
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            Card.filled(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 4,
+                      horizontal: 8,
+                    ),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        _currentWeekBucket(
+                                _dateOfDisplayedData)[_dateOfDisplayedData]!
+                            .formmettedAmount,
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
+                        textDirection: TextDirection.rtl,
+                      ),
+                    ),
+                  ),
+                  MultiColorChart(
+                    buckets: _currentWeekBucket(
+                      DateTime.now(),
+                    ).values.toList(),
+                    dateType: widget.appState.dateType,
+                    onBarTap: changeDateChartData,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

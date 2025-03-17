@@ -32,7 +32,7 @@ class _CardsScreenState extends State<CardsScreen> {
     }
 
     return ListView.builder(
-      padding: EdgeInsets.only(bottom: 90),
+      padding: EdgeInsets.only(bottom: 90, top: 10),
       itemBuilder: (context, indx) => Dismissible(
         key: ValueKey(widget.appState.widget.learnTimes[indx]),
         child: LearnTimeCard(
