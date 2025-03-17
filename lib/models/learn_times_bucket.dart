@@ -1,4 +1,5 @@
 import 'package:zman_limud_demo/models/learn_time.dart';
+import 'package:zman_limud_demo/util/general_util.dart';
 
 class LearnTimesBucket {
   LearnTimesBucket({
@@ -22,6 +23,12 @@ class LearnTimesBucket {
     }
     return sum;
   }
+
+  String get formmettedAmount => amount < 1
+      ? '${doublesFormat.format((amount * 60) % 60)} דקות'
+      : amount.toInt() == amount
+          ? '${doublesFormat.format(amount.floor())} שעות'
+          : '${doublesFormat.format(amount.floor())} שעות ו${doublesFormat.format((amount * 60) % 60)} דקות';
 
   void addLearnTime(LearnTime learnTime) {
     learnTimes.add(learnTime);

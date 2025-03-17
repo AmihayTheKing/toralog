@@ -32,40 +32,43 @@ class MultiColorChart extends StatelessWidget {
       ),
       width: double.infinity,
       height: 180,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color: Theme.of(context).colorScheme.surfaceContainerHigh,
-      ),
       child: Row(
         textDirection: TextDirection.rtl,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           for (final bucket in buckets)
             Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  MultiColorChartBar(
-                    bucket: bucket,
-                    generalFillFactor: maxTotalExpense == 0
-                        ? 0
-                        : bucket.amount / maxTotalExpense,
-                  ),
-                  SizedBox(height: 8),
-                  dateType == DateType.jewish
-                      ? Text(
-                          JewishDate.fromDateTime(bucket.countedThing)
-                              .getFormattedDateForChart(),
-                          style: TextStyle().copyWith(fontSize: 13),
-                          textDirection: TextDirection.rtl,
-                          textAlign: TextAlign.center,
-                        )
-                      : Text(
-                          dateFormatForChart.format(bucket.countedThing),
-                          textAlign: TextAlign.center,
-                        ),
-                ],
+              child: InkWell(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+                onTap: () {},
+                child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    MultiColorChartBar(
+                      bucket: bucket,
+                      generalFillFactor: maxTotalExpense == 0
+                          ? 0
+                          : bucket.amount / maxTotalExpense,
+                    ),
+                    SizedBox(height: 8),
+                    dateType == DateType.jewish
+                        ? Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 1),
+                            child: Text(
+                              JewishDate.fromDateTime(bucket.countedThing)
+                                  .getFormattedDateForChart(),
+                              style: TextStyle().copyWith(fontSize: 11.5),
+                              textDirection: TextDirection.rtl,
+                              textAlign: TextAlign.center,
+                            ),
+                          )
+                        : Text(
+                            dateFormatForChart.format(bucket.countedThing),
+                            textAlign: TextAlign.center,
+                          ),
+                  ],
+                ),
               ),
             )
         ],
