@@ -60,11 +60,13 @@ class LearnTime {
     return (minutesEnd - minutesStart) / 60;
   }
 
-  String get formattedHours => hours < 1
-      ? '${doublesFormat.format((hours * 60) % 60)} דקות'
-      : hours.toInt() == hours
-          ? '${doublesFormat.format(hours.floor())} שעות'
-          : '${doublesFormat.format(hours.floor())} שעות ו${doublesFormat.format((hours * 60) % 60)} דקות';
+  String get formattedHours => hours == 0
+      ? 'ביטול תורה מוחלט'
+      : hours < 1
+          ? '${doublesFormat.format((hours * 60) % 60)} דקות'
+          : hours.toInt() == hours
+              ? '${doublesFormat.format(hours.floor())} שעות'
+              : '${doublesFormat.format(hours.floor())} שעות ו${doublesFormat.format((hours * 60) % 60)} דקות';
 
   Map<String, dynamic> get map => {
         'id': id,

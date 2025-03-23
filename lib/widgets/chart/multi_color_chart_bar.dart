@@ -1,24 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:zman_limud_demo/models/learn_times_bucket.dart';
 import 'package:zman_limud_demo/util/category.dart';
 
 class MultiColorChartBar extends StatelessWidget {
-  MultiColorChartBar(
-      {super.key, required this.generalFillFactor, required this.bucket}) {
-    for (var category in Category.values) {
-      LearnTimesBucket tempBucket = LearnTimesBucket.fromList(
-        allLearnTimes: bucket.learnTimes,
-        countedThing: category,
-        filter: (learnTime) => learnTime.category == category,
-      );
-      allFillFactors[category] =
-          tempBucket.amount == 0 ? 0 : tempBucket.amount / bucket.amount;
-    }
-  }
+  const MultiColorChartBar(
+      {super.key,
+      required this.generalFillFactor,
+      required this.innerFillPercentages});
 
   final double generalFillFactor;
-  final LearnTimesBucket bucket;
-  final Map<Category, double> allFillFactors = {};
+  final Map<Category, double> innerFillPercentages;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +28,7 @@ class MultiColorChartBar extends StatelessWidget {
                 children: [
                   for (var category in Category.values)
                     SizedBox(
-                      height: (allFillFactors[category] ?? 0) *
+                      height: (innerFillPercentages[category] ?? 0) *
                           constraints.minHeight,
                       child: DecoratedBox(
                         decoration: BoxDecoration(

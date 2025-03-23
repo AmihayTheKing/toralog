@@ -24,7 +24,7 @@ class LearnTimesBucket {
     return sum;
   }
 
-  String get formmettedAmount => amount == 0
+  String get formattedAmount => amount == 0
       ? 'אפס, כמוך'
       : amount < 1
           ? '${doublesFormat.format((amount * 60) % 60)} דקות'

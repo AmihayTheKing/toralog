@@ -16,8 +16,12 @@ class ChartsScreen extends StatefulWidget {
 }
 
 class _ChartsScreenState extends State<ChartsScreen> {
+  int weekDifference = 0;
   DateTime _dateOfDisplayedData = DateTime.now();
   Category _categoryOfDisplayedData = Category.other;
+  List<LearnTimesBucket> _currentShownDayBuckets = [];
+
+  bool displayHorizontalLine = true;
 
   Map<DateTime, LearnTimesBucket> _currentWeekBucket(DateTime date) {
     DateTime startOfWeek = date.subtract(
@@ -28,33 +32,62 @@ class _ChartsScreenState extends State<ChartsScreen> {
     for (var i = 0; i <= 6; i++) {
       DateTime currentDate = startOfWeek.copyWith(day: startOfWeek.day + i);
 
-      map[currentDate] = LearnTimesBucket.fromList(
+      map[currentDate.onlyDate] = LearnTimesBucket.fromList(
         allLearnTimes: widget.appState.widget.learnTimes,
-        countedThing: currentDate,
+        countedThing: currentDate.onlyDate,
         filter: (learnTime) => learnTime.date.isSameDate(currentDate),
       );
     }
     return map;
   }
 
-  void changeDateChartData(DateTime date) {
-    setState(() => _dateOfDisplayedData = date);
+  void changeDateChartData(
+      DateTime date, List<LearnTimesBucket> currentShownDayBuckets) {
+    setState(
+      () {
+        _dateOfDisplayedData = date;
+        _currentShownDayBuckets = currentShownDayBuckets;
+        displayHorizontalLine =
+            _currentShownDayBuckets.any((bucket) => bucket.amount > 0);
+      },
+    );
   }
 
   void changeCategoryChartData(Category category) {
-    setState(() => _categoryOfDisplayedData = category);
+    setState(() {
+      _categoryOfDisplayedData = category;
+    });
+  }
+
+  List<LearnTimesBucket> getInnerBuckets(LearnTimesBucket bucket) {
+    return Category.values.map((category) {
+      return LearnTimesBucket.fromList(
+        allLearnTimes: bucket.learnTimes,
+        countedThing: category,
+        filter: (learnTime) => learnTime.category == category,
+      );
+    }).toList();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _currentShownDayBuckets.addAll(getInnerBuckets(
+        _currentWeekBucket(DateTime.now())[DateTime.now().onlyDate]!));
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
-        padding: const EdgeInsets.only(
-          bottom: 90,
-        ),
+        padding: const EdgeInsets.only(bottom: 90, top: 10),
         child: Column(
           children: [
-            SizedBox(height: 10),
             Card.filled(
               child: Column(
                 children: [
@@ -70,7 +103,7 @@ class _ChartsScreenState extends State<ChartsScreen> {
                             .appState
                             .widget
                             .categoryBuckets[_categoryOfDisplayedData]!
-                            .formmettedAmount,
+                            .formattedAmount,
                         style: TextStyle(
                             fontSize: 20, fontWeight: FontWeight.bold),
                         textDirection: TextDirection.rtl,
@@ -87,33 +120,83 @@ class _ChartsScreenState extends State<ChartsScreen> {
               ),
             ),
             Card.filled(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 4,
-                      horizontal: 8,
-                    ),
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        _currentWeekBucket(
-                                _dateOfDisplayedData)[_dateOfDisplayedData]!
-                            .formmettedAmount,
-                        style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
-                        textDirection: TextDirection.rtl,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          _currentWeekBucket(_dateOfDisplayedData)[
+                                  _dateOfDisplayedData.onlyDate]!
+                              .formattedAmount,
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
+                          textDirection: TextDirection.rtl,
+                        ),
                       ),
                     ),
-                  ),
-                  MultiColorChart(
-                    buckets: _currentWeekBucket(
-                      DateTime.now(),
-                    ).values.toList(),
-                    dateType: widget.appState.dateType,
-                    onBarTap: changeDateChartData,
-                  ),
-                ],
+                    SizedBox(
+                      height: 180,
+                      child: PageView.builder(
+                        controller: PageController(
+                          initialPage: 0,
+                        ),
+                        itemBuilder: (context, index) => MultiColorChart(
+                          onBarTap: changeDateChartData,
+                          buckets: _currentWeekBucket(
+                            DateTime.now().add(Duration(days: (-index) * 7)),
+                          ).values.toList(),
+                          dateType: widget.appState.dateType,
+                        ),
+                      ),
+                    ),
+                    if (displayHorizontalLine)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 3),
+                        child: Divider(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest,
+                          thickness: 2,
+                        ),
+                      ),
+                    for (var bucket in _currentShownDayBuckets)
+                      if (bucket.amount > 0)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 4, horizontal: 8),
+                          child: Row(
+                            textDirection: TextDirection.rtl,
+                            children: [
+                              SizedBox(
+                                width: 12,
+                                height: 12,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: categoryColors[bucket.countedThing]
+                                        ?.withOpacity(0.77),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                '${categoryNames[bucket.countedThing]}',
+                                style: TextStyle(fontSize: 15),
+                              ),
+                              Spacer(),
+                              Text(
+                                bucket.formattedAmount,
+                                textDirection: TextDirection.rtl,
+                              ),
+                            ],
+                          ),
+                        ),
+                  ],
+                ),
               ),
             ),
           ],

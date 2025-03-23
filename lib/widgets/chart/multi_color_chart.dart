@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kosher_dart/kosher_dart.dart';
+import 'package:zman_limud_demo/util/category.dart';
 import 'package:zman_limud_demo/util/general_util.dart';
 import 'package:zman_limud_demo/widgets/chart/multi_color_chart_bar.dart';
 import 'package:zman_limud_demo/models/learn_times_bucket.dart';
@@ -13,7 +14,7 @@ class MultiColorChart extends StatelessWidget {
 
   final List<LearnTimesBucket> buckets;
   final DateType dateType;
-  final void Function(DateTime) onBarTap;
+  final void Function(DateTime, List<LearnTimesBucket>) onBarTap;
 
   double get maxTotalExpense {
     double maxTotalExpense = 0;
@@ -25,6 +26,34 @@ class MultiColorChart extends StatelessWidget {
     }
 
     return maxTotalExpense;
+  }
+
+  List<LearnTimesBucket> getInnerBuckets(LearnTimesBucket bucket) {
+    List<LearnTimesBucket> tempBuckets = [];
+    for (var category in Category.values) {
+      tempBuckets.add(
+        LearnTimesBucket.fromList(
+          allLearnTimes: bucket.learnTimes,
+          countedThing: category,
+          filter: (learnTime) => learnTime.category == category,
+        ),
+      );
+    }
+    return tempBuckets;
+  }
+
+  Map<Category, double> getInnerFillPercentages(LearnTimesBucket bucket) {
+    Map<Category, double> fillPercent = {};
+    for (var category in Category.values) {
+      LearnTimesBucket tempBucket = LearnTimesBucket.fromList(
+        allLearnTimes: bucket.learnTimes,
+        countedThing: category,
+        filter: (learnTime) => learnTime.category == category,
+      );
+      fillPercent[category] =
+          tempBucket.amount == 0 ? 0 : tempBucket.amount / bucket.amount;
+    }
+    return fillPercent;
   }
 
   @override
@@ -44,13 +73,14 @@ class MultiColorChart extends StatelessWidget {
             Expanded(
               child: InkWell(
                 borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-                onTap: () => onBarTap(bucket.countedThing),
+                onTap: () =>
+                    onBarTap(bucket.countedThing, getInnerBuckets(bucket)),
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     MultiColorChartBar(
-                      bucket: bucket,
+                      innerFillPercentages: getInnerFillPercentages(bucket),
                       generalFillFactor: maxTotalExpense == 0
                           ? 0
                           : bucket.amount / maxTotalExpense,

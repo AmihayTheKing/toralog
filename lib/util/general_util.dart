@@ -17,6 +17,11 @@ final HebrewDateFormatter jewishDateFormat = HebrewDateFormatter()
 final DateFormat onlyHourDateFormat = DateFormat.Hm();
 
 extension DateTimeExtenson on DateTime {
+  DateTime get onlyDate {
+    return copyWith(
+        hour: 0, minute: 0, second: 0, millisecond: 0, microsecond: 0);
+  }
+
   bool isSameDate(DateTime other) {
     return year == other.year && month == other.month && day == other.day;
   }
