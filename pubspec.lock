@@ -81,6 +81,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.6"
+  cupertino_hebrew_date_picker:
+    dependency: "direct main"
+    description:
+      name: cupertino_hebrew_date_picker
+      sha256: "68a1124c399b9eeafe59e5fa2048fe8b3ab201df74d1c72c4aab6a5736391cb3"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.2"
   cupertino_icons:
     dependency: "direct main"
     description:

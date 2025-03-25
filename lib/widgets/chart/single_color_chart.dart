@@ -11,7 +11,7 @@ class SingleColorChart extends StatelessWidget {
       required this.dateType,
       required this.onBarTap});
 
-  final List<LearnTimesBucket> buckets;
+  final List<LearnTimesBucket<Category>> buckets;
   final DateType dateType;
   final void Function(Category) onBarTap;
 
@@ -49,8 +49,8 @@ class SingleColorChart extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     SingleColorChartBar(
-                      color: categoryColors[bucket.countedThing]
-                          ?.withOpacity(0.77),
+                      color: categoryColors[bucket.countedThing]!
+                          .withOpacity(0.77),
                       fillFactor: maxTotalExpense == 0
                           ? 0
                           : bucket.amount / maxTotalExpense,

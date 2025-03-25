@@ -1,7 +1,7 @@
 import 'package:zman_limud_demo/models/learn_time.dart';
 import 'package:zman_limud_demo/util/general_util.dart';
 
-class LearnTimesBucket {
+class LearnTimesBucket<T> {
   LearnTimesBucket({
     required this.countedThing,
   });
@@ -12,7 +12,7 @@ class LearnTimesBucket {
       required bool Function(LearnTime) filter})
       : learnTimes = allLearnTimes.where(filter).toList();
 
-  final dynamic countedThing;
+  final T countedThing;
   List<LearnTime> learnTimes = [];
 
   double get amount {
@@ -30,7 +30,7 @@ class LearnTimesBucket {
           ? '${doublesFormat.format((amount * 60) % 60)} דקות'
           : amount.toInt() == amount
               ? '${doublesFormat.format(amount.floor())} שעות'
-              : '${doublesFormat.format(amount.floor())} שעות ו${doublesFormat.format((amount * 60) % 60)} דקות';
+              : '${doublesFormat.format(amount.floor())} שעות ו ${doublesFormat.format((amount * 60) % 60)} דקות';
 
   void addLearnTime(LearnTime learnTime) {
     learnTimes.add(learnTime);

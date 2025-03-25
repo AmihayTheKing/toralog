@@ -19,20 +19,20 @@ class _ChartsScreenState extends State<ChartsScreen> {
   int weekDifference = 0;
   DateTime _dateOfDisplayedData = DateTime.now();
   Category _categoryOfDisplayedData = Category.other;
-  List<LearnTimesBucket> _currentShownDayBuckets = [];
+  List<LearnTimesBucket<Category>> _currentShownDayBuckets = [];
 
   bool displayHorizontalLine = true;
 
-  Map<DateTime, LearnTimesBucket> _currentWeekBucket(DateTime date) {
+  Map<DateTime, LearnTimesBucket<DateTime>> _currentWeekBucket(DateTime date) {
     DateTime startOfWeek = date.subtract(
       Duration(days: date.weekday == 7 ? 0 : date.weekday),
     );
 
-    Map<DateTime, LearnTimesBucket> map = {};
+    Map<DateTime, LearnTimesBucket<DateTime>> map = {};
     for (var i = 0; i <= 6; i++) {
       DateTime currentDate = startOfWeek.copyWith(day: startOfWeek.day + i);
 
-      map[currentDate.onlyDate] = LearnTimesBucket.fromList(
+      map[currentDate.onlyDate] = LearnTimesBucket<DateTime>.fromList(
         allLearnTimes: widget.appState.widget.learnTimes,
         countedThing: currentDate.onlyDate,
         filter: (learnTime) => learnTime.date.isSameDate(currentDate),
@@ -42,7 +42,7 @@ class _ChartsScreenState extends State<ChartsScreen> {
   }
 
   void changeDateChartData(
-      DateTime date, List<LearnTimesBucket> currentShownDayBuckets) {
+      DateTime date, List<LearnTimesBucket<Category>> currentShownDayBuckets) {
     setState(
       () {
         _dateOfDisplayedData = date;
@@ -59,9 +59,10 @@ class _ChartsScreenState extends State<ChartsScreen> {
     });
   }
 
-  List<LearnTimesBucket> getInnerBuckets(LearnTimesBucket bucket) {
+  List<LearnTimesBucket<Category>> getInnerBuckets(
+      LearnTimesBucket<DateTime> bucket) {
     return Category.values.map((category) {
-      return LearnTimesBucket.fromList(
+      return LearnTimesBucket<Category>.fromList(
         allLearnTimes: bucket.learnTimes,
         countedThing: category,
         filter: (learnTime) => learnTime.category == category,

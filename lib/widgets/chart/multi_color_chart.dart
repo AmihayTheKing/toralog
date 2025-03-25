@@ -12,9 +12,9 @@ class MultiColorChart extends StatelessWidget {
       required this.dateType,
       required this.onBarTap});
 
-  final List<LearnTimesBucket> buckets;
+  final List<LearnTimesBucket<DateTime>> buckets;
   final DateType dateType;
-  final void Function(DateTime, List<LearnTimesBucket>) onBarTap;
+  final void Function(DateTime, List<LearnTimesBucket<Category>>) onBarTap;
 
   double get maxTotalExpense {
     double maxTotalExpense = 0;
@@ -28,11 +28,12 @@ class MultiColorChart extends StatelessWidget {
     return maxTotalExpense;
   }
 
-  List<LearnTimesBucket> getInnerBuckets(LearnTimesBucket bucket) {
-    List<LearnTimesBucket> tempBuckets = [];
+  List<LearnTimesBucket<Category>> getInnerBuckets(
+      LearnTimesBucket<DateTime> bucket) {
+    List<LearnTimesBucket<Category>> tempBuckets = [];
     for (var category in Category.values) {
       tempBuckets.add(
-        LearnTimesBucket.fromList(
+        LearnTimesBucket<Category>.fromList(
           allLearnTimes: bucket.learnTimes,
           countedThing: category,
           filter: (learnTime) => learnTime.category == category,
@@ -42,10 +43,12 @@ class MultiColorChart extends StatelessWidget {
     return tempBuckets;
   }
 
-  Map<Category, double> getInnerFillPercentages(LearnTimesBucket bucket) {
+  Map<Category, double> getInnerFillPercentages(
+      LearnTimesBucket<DateTime> bucket) {
     Map<Category, double> fillPercent = {};
     for (var category in Category.values) {
-      LearnTimesBucket tempBucket = LearnTimesBucket.fromList(
+      LearnTimesBucket<Category> tempBucket =
+          LearnTimesBucket<Category>.fromList(
         allLearnTimes: bucket.learnTimes,
         countedThing: category,
         filter: (learnTime) => learnTime.category == category,

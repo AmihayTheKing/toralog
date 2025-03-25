@@ -1,9 +1,9 @@
 import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:kosher_dart/kosher_dart.dart';
+import 'package:zman_limud_demo/hebrewDatePicker/cupertino_hebrew_date_picker.dart';
 import 'package:zman_limud_demo/hebrewDatePicker/theme.dart';
 import 'package:zman_limud_demo/util/category.dart';
 import 'package:zman_limud_demo/models/learn_time.dart';
@@ -123,52 +123,93 @@ class _EditMenuState extends State<EditMenu> {
   }
 
   void _chooseDateGregorian() async {
-    _pickedDate = (await showDatePicker(
-          context: context,
-          initialDate: _pickedDate,
-          firstDate: DateTime(_pickedDate.year - 1),
-          lastDate: DateTime.now(),
-        )) ??
-        DateTime.now();
+    if (Platform.isIOS) {
+      await showCupertinoModalPopup(
+        context: context,
+        builder: (context) => SizedBox(
+          height: 200,
+          child: CupertinoDatePicker(
+            mode: CupertinoDatePickerMode.date,
+            initialDateTime: _pickedDate,
+            minimumDate: DateTime(_pickedDate.year - 1),
+            maximumDate: DateTime.now(),
+            onDateTimeChanged: (DateTime value) => _pickedDate = value,
+          ),
+        ),
+      );
+    } else {
+      _pickedDate = (await showDatePicker(
+            context: context,
+            initialDate: _pickedDate,
+            firstDate: DateTime(_pickedDate.year - 1),
+            lastDate: DateTime.now(),
+          )) ??
+          DateTime.now();
+    }
     setState(() {});
   }
 
   void _chooseDateJewish() async {
-    await showMaterialHebrewDatePicker(
-      context: context,
-      initialDate: _pickedDate,
-      firstDate: _pickedDate.subtract(Duration(days: 30)),
-      lastDate: DateTime.now().add(Duration(days: 30)),
-      hebrewFormat: true,
-      onConfirmDate: (date) {
-        setState(() => _pickedDate = date);
-      },
-      onDateChange: (DateTime value) {},
-      theme: HebrewDatePickerTheme(
-        primaryColor: Theme.of(context).colorScheme.primary,
-        onPrimaryColor: Theme.of(context).colorScheme.onPrimary,
-        surfaceColor: Theme.of(context).colorScheme.surface,
-        onSurfaceColor: Theme.of(context).colorScheme.onSurface,
-        disabledColor:
-            Theme.of(context).colorScheme.onSurface.withOpacity(0.38),
-        selectedColor: Theme.of(context).colorScheme.primary,
-        todayColor: Theme.of(context).colorScheme.primary,
-        headerTextStyle: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.primary,
+    if (Platform.isIOS) {
+      await showCupertinoModalPopup(
+        context: context,
+        builder: (context) => SizedBox(
+          height: 200,
+          child: CupertinoHebrewDatePicker(
+            context: context,
+            onDateChanged: (DateTime value) => _pickedDate = value,
+            onConfirm: (DateTime value) {
+              setState(
+                () => value.isAfter(DateTime.now())
+                    ? _pickedDate = DateTime.now()
+                    : _pickedDate = value,
+              );
+            },
+            initialDate: _pickedDate,
+            confirmText: 'אישור',
+            todaysDateTextStyle: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
         ),
-        bodyTextStyle: TextStyle(
-          fontSize: 14,
-          color: Theme.of(context).colorScheme.primary,
+      );
+    } else {
+      await showMaterialHebrewDatePicker(
+        context: context,
+        initialDate: _pickedDate,
+        firstDate: _pickedDate.subtract(Duration(days: 30)),
+        lastDate: DateTime.now().add(Duration(days: 30)),
+        hebrewFormat: true,
+        onConfirmDate: (date) {
+          setState(() => _pickedDate = date);
+        },
+        onDateChange: (DateTime value) {},
+        theme: HebrewDatePickerTheme(
+          primaryColor: Theme.of(context).colorScheme.primary,
+          onPrimaryColor: Theme.of(context).colorScheme.onPrimary,
+          surfaceColor: Theme.of(context).colorScheme.surface,
+          onSurfaceColor: Theme.of(context).colorScheme.onSurface,
+          disabledColor:
+              Theme.of(context).colorScheme.onSurface.withOpacity(0.38),
+          selectedColor: Theme.of(context).colorScheme.primary,
+          todayColor: Theme.of(context).colorScheme.primary,
+          headerTextStyle: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          bodyTextStyle: TextStyle(
+            fontSize: 14,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          weekdayTextStyle: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
-        weekdayTextStyle: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-      ),
-    );
+      );
+    }
   }
 
   @override

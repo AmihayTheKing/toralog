@@ -32,9 +32,9 @@ class App extends StatefulWidget {
   App({super.key});
 
   List<LearnTime> learnTimes = [];
-  Map<Category, LearnTimesBucket> categoryBuckets = Map.fromIterable(
+  Map<Category, LearnTimesBucket<Category>> categoryBuckets = Map.fromIterable(
       Category.values,
-      value: (category) => LearnTimesBucket(countedThing: category));
+      value: (category) => LearnTimesBucket<Category>(countedThing: category));
 
   @override
   State<App> createState() => AppState();
@@ -59,7 +59,8 @@ class AppState extends State<App> {
         // Rebuild category and date buckets
         widget.categoryBuckets = Map.fromIterable(
           Category.values,
-          value: (category) => LearnTimesBucket(countedThing: category),
+          value: (category) =>
+              LearnTimesBucket<Category>(countedThing: category),
         );
 
         for (var element in widget.learnTimes) {

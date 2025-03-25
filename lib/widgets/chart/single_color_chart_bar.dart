@@ -6,7 +6,7 @@ class SingleColorChartBar extends StatelessWidget {
 
   final double fillFactor;
 
-  final Color? color;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
