@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:zman_limud_demo/data/learn_times.dart';
 import 'package:zman_limud_demo/models/learn_times_bucket.dart';
+import 'package:zman_limud_demo/screens/settings_screen.dart';
 import 'package:zman_limud_demo/themes/dark_theme.dart';
 import 'package:zman_limud_demo/util/general_util.dart';
 import 'package:zman_limud_demo/widgets/add_menu.dart';
 import 'package:zman_limud_demo/widgets/edit_menu.dart';
-import 'package:zman_limud_demo/widgets/screens/charts_screen.dart';
+import 'package:zman_limud_demo/screens/charts_screen.dart';
 import 'package:zman_limud_demo/models/learn_time.dart';
-import 'package:zman_limud_demo/widgets/screens/cards_screen.dart';
+import 'package:zman_limud_demo/screens/cards_screen.dart';
 import 'package:zman_limud_demo/themes/light_theme.dart';
 import 'package:zman_limud_demo/util/category.dart';
 
@@ -78,6 +79,17 @@ class AppState extends State<App> {
     }
   }
 
+  void _openSettings() async {
+    dateType = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => SettingsScreen(
+          selectedDateType: dateType,
+        ),
+      ),
+    );
+    setState(() {});
+  }
+
   void openEditMenu(LearnTime learnTime) {
     showModalBottomSheet(
       context: context,
@@ -102,16 +114,19 @@ class AppState extends State<App> {
         widget.learnTimes.remove(learnTime);
         widget.categoryBuckets[learnTime.category]?.removeLearnTime(learnTime);
       });
-
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           duration: Duration(seconds: 4),
           content: Text('הלימוד ${learnTime.title} נמחק בהצלחה'),
           action: SnackBarAction(
             label: 'ביטול',
-            onPressed: () => setState(
-              () => addLearnTime(learnTime),
-            ),
+            onPressed: () {
+              setState(() {
+                addLearnTime(learnTime);
+              });
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            },
           ),
         ),
       );
@@ -151,7 +166,7 @@ class AppState extends State<App> {
       setState(() {
         widget.learnTimes[widget.learnTimes.indexOf(learnTime)] = learnTime;
         widget.learnTimes.sort((a, b) => b.date.compareTo(a.date));
-        widget.categoryBuckets[learnTime.category]?.updateLearnTime(learnTime);
+        widget.categoryBuckets[learnTime.category]!.updateLearnTime(learnTime);
       });
     } catch (e) {
       if (kDebugMode) {
@@ -177,61 +192,64 @@ class AppState extends State<App> {
           mainAxisSize: MainAxisSize.max,
           textDirection: TextDirection.rtl,
           children: [
-            InkWell(
-              overlayColor: WidgetStatePropertyAll(Colors.transparent),
-              onTap: () {
-                setState(() {
-                  dateType = dateType == DateType.gregorian
-                      ? DateType.jewish
-                      : DateType.gregorian;
-                });
-              },
-              child: dateType == DateType.gregorian
-                  ? Stack(
-                      alignment: Alignment.lerp(
-                              Alignment.center, Alignment.bottomCenter, 0.5) ??
-                          Alignment.center,
-                      children: [
-                        Icon(
-                          Icons.calendar_today,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          size: 30,
-                        ),
-                        Text(
-                          'א',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
+            /*Padding(
+              padding: const EdgeInsets.only(left: 15),
+              child: InkWell(
+                overlayColor: WidgetStatePropertyAll(Colors.transparent),
+                onTap: () {
+                  setState(() {
+                    dateType = dateType == DateType.gregorian
+                        ? DateType.jewish
+                        : DateType.gregorian;
+                  });
+                },
+                child: dateType == DateType.gregorian
+                    ? Stack(
+                        alignment: Alignment.lerp(Alignment.center,
+                                Alignment.bottomCenter, 0.5) ??
+                            Alignment.center,
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
                             color: Theme.of(context).colorScheme.onPrimary,
+                            size: 30,
                           ),
-                        ),
-                      ],
-                    )
-                  : Stack(
-                      alignment: Alignment.lerp(
-                              Alignment.center, Alignment.bottomCenter, 0.8) ??
-                          Alignment.center,
-                      children: [
-                        Icon(
-                          Icons.calendar_today,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          size: 30,
-                        ),
-                        Text(
-                          '1',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
+                          Text(
+                            'א',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Stack(
+                        alignment: Alignment.lerp(Alignment.center,
+                                Alignment.bottomCenter, 0.8) ??
+                            Alignment.center,
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
                             color: Theme.of(context).colorScheme.onPrimary,
+                            size: 30,
                           ),
-                        ),
-                      ],
-                    ),
-            ),
+                          Text(
+                            '1',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ),*/
             IconButton(
               icon: Icon(
-                Icons.more_vert,
+                Icons.settings_rounded,
                 color: Theme.of(context).appBarTheme.iconTheme?.color,
               ),
-              onPressed: null,
+              onPressed: _openSettings,
             ),
           ],
         ),
@@ -256,7 +274,7 @@ class AppState extends State<App> {
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_view_day_rounded),
+            icon: Icon(Icons.table_rows_rounded),
             label: 'זמני לימוד',
           ),
           BottomNavigationBarItem(

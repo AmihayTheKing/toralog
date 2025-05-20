@@ -1,6 +1,10 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:kosher_dart/kosher_dart.dart';
+import 'package:zman_limud_demo/hebrewDatePicker/cupertino_hebrew_date_picker.dart';
 import 'package:zman_limud_demo/hebrewDatePicker/material_hebrew_date_picker.dart';
 import 'package:zman_limud_demo/hebrewDatePicker/theme.dart';
 import 'package:zman_limud_demo/util/category.dart';
@@ -90,26 +94,89 @@ class _AddMenuState extends State<AddMenu> {
   }
 
   void _chooseEndTime() async {
-    _pickedEndTime = await showTimePicker(
-          context: context,
-          initialTime: _pickedEndTime,
-        ) ??
-        _pickedEndTime;
-    setState(() {});
+    if (Platform.isIOS) {
+      await showCupertinoModalPopup(
+        context: context,
+        builder: (context) => SizedBox(
+          height: 200,
+          child: CupertinoDatePicker(
+            mode: CupertinoDatePickerMode.time,
+            initialDateTime: DateTime.now(),
+            use24hFormat: true,
+            onDateTimeChanged: (DateTime value) {
+              setState(
+                () => _pickedEndTime = TimeOfDay.fromDateTime(value),
+              );
+            },
+          ),
+        ),
+      );
+    } else {
+      _pickedEndTime = await showTimePicker(
+            context: context,
+            initialTime: _pickedEndTime,
+          ) ??
+          _pickedEndTime;
+      setState(() {});
+    }
   }
 
   void _chooseDateGregorian() async {
-    _pickedDate = (await showDatePicker(
-          context: context,
-          initialDate: DateTime.now(),
-          firstDate: DateTime(DateTime.now().year - 1),
-          lastDate: DateTime.now(),
-        )) ??
-        DateTime.now();
-    setState(() {});
+    if (Platform.isIOS) {
+      (await showCupertinoModalPopup(
+        context: context,
+        builder: (context) => SizedBox(
+          height: 200,
+          child: CupertinoDatePicker(
+            mode: CupertinoDatePickerMode.date,
+            initialDateTime: DateTime.now(),
+            minimumDate: DateTime(DateTime.now().year - 1),
+            maximumDate: DateTime.now(),
+            onDateTimeChanged: (DateTime value) {
+              setState(
+                () => _pickedDate = value,
+              );
+            },
+          ),
+        ),
+      ));
+    } else {
+      _pickedDate = (await showDatePicker(
+            context: context,
+            initialDate: DateTime.now(),
+            firstDate: DateTime(DateTime.now().year - 1),
+            lastDate: DateTime.now(),
+          )) ??
+          DateTime.now();
+      setState(() {});
+    }
   }
 
   void _chooseDateJewish() async {
+    if (Platform.isIOS) {
+      await showCupertinoModalPopup(
+        context: context,
+        builder: (context) => SizedBox(
+          height: 200,
+          child: CupertinoHebrewDatePicker(
+            context: context,
+            onDateChanged: (DateTime value) => _pickedDate = value,
+            onConfirm: (DateTime value) {
+              setState(
+                () => value.isAfter(DateTime.now())
+                    ? _pickedDate = DateTime.now()
+                    : _pickedDate = value,
+              );
+            },
+            initialDate: DateTime.now(),
+            confirmText: 'אישור',
+            todaysDateTextStyle: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        ),
+      );
+    }
     await showMaterialHebrewDatePicker(
       context: context,
       initialDate: DateTime.now(),

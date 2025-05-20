@@ -43,7 +43,7 @@ class LearnTimesBucket<T> {
   void updateLearnTime(LearnTime newLearnTime) {
     for (var learnTime in learnTimes) {
       if (learnTime.id == newLearnTime.id) {
-        learnTime = newLearnTime;
+        learnTimes[learnTimes.indexOf(learnTime)] = newLearnTime;
       }
     }
   }

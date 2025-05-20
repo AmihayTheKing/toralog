@@ -105,21 +105,69 @@ class _EditMenuState extends State<EditMenu> {
   }
 
   void _chooseStartTime() async {
-    _pickedStartTime = await showTimePicker(
-          context: context,
-          initialTime: _pickedStartTime,
-        ) ??
-        _pickedStartTime;
-    setState(() {});
+    if (Platform.isAndroid) {
+      await showCupertinoModalPopup(
+        context: context,
+        builder: (context) => SizedBox(
+          height: 200,
+          child: CupertinoDatePicker(
+            mode: CupertinoDatePickerMode.time,
+            initialDateTime: DateTime(
+              DateTime.now().year,
+              DateTime.now().month,
+              DateTime.now().day,
+              _pickedStartTime.hour,
+              _pickedStartTime.minute,
+            ),
+            use24hFormat: true,
+            onDateTimeChanged: (DateTime value) {
+              _pickedStartTime = TimeOfDay.fromDateTime(value);
+              setState(() {});
+            },
+          ),
+        ),
+      );
+    } else {
+      _pickedStartTime = await showTimePicker(
+            context: context,
+            initialTime: _pickedStartTime,
+          ) ??
+          _pickedStartTime;
+      setState(() {});
+    }
   }
 
   void _chooseEndTime() async {
-    _pickedEndTime = await showTimePicker(
-          context: context,
-          initialTime: _pickedEndTime,
-        ) ??
-        _pickedEndTime;
-    setState(() {});
+    if (Platform.isIOS) {
+      await showCupertinoModalPopup(
+        context: context,
+        builder: (context) => SizedBox(
+          height: 200,
+          child: CupertinoDatePicker(
+            mode: CupertinoDatePickerMode.time,
+            initialDateTime: DateTime(
+              DateTime.now().year,
+              DateTime.now().month,
+              DateTime.now().day,
+              _pickedEndTime.hour,
+              _pickedEndTime.minute,
+            ),
+            use24hFormat: true,
+            onDateTimeChanged: (DateTime value) {
+              _pickedEndTime = TimeOfDay.fromDateTime(value);
+              setState(() {});
+            },
+          ),
+        ),
+      );
+    } else {
+      _pickedEndTime = await showTimePicker(
+            context: context,
+            initialTime: _pickedEndTime,
+          ) ??
+          _pickedEndTime;
+      setState(() {});
+    }
   }
 
   void _chooseDateGregorian() async {

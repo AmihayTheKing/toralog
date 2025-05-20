@@ -20,8 +20,7 @@ class _ChartsScreenState extends State<ChartsScreen> {
   DateTime _dateOfDisplayedData = DateTime.now();
   Category _categoryOfDisplayedData = Category.other;
   List<LearnTimesBucket<Category>> _currentShownDayBuckets = [];
-
-  bool displayHorizontalLine = true;
+  late bool displayHorizontalLine;
 
   Map<DateTime, LearnTimesBucket<DateTime>> _currentWeekBucket(DateTime date) {
     DateTime startOfWeek = date.subtract(
@@ -73,8 +72,13 @@ class _ChartsScreenState extends State<ChartsScreen> {
   @override
   void initState() {
     super.initState();
-    _currentShownDayBuckets.addAll(getInnerBuckets(
-        _currentWeekBucket(DateTime.now())[DateTime.now().onlyDate]!));
+    _currentShownDayBuckets.addAll(
+      getInnerBuckets(
+        _currentWeekBucket(DateTime.now())[DateTime.now().onlyDate]!,
+      ),
+    );
+    displayHorizontalLine =
+        _currentShownDayBuckets.any((bucket) => bucket.amount > 0);
   }
 
   @override
