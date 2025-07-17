@@ -2,26 +2,25 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kosher_dart/kosher_dart.dart';
 import 'package:zman_limud_demo/hebrewDatePicker/cupertino_hebrew_date_picker.dart';
-import 'package:zman_limud_demo/hebrewDatePicker/theme.dart';
-import 'package:zman_limud_demo/util/category.dart';
-import 'package:zman_limud_demo/models/learn_time.dart';
-import 'package:zman_limud_demo/main.dart';
-import 'package:zman_limud_demo/util/general_util.dart';
 import 'package:zman_limud_demo/hebrewDatePicker/material_hebrew_date_picker.dart';
+import 'package:zman_limud_demo/providers/learn_times_provider.dart';
+import 'package:zman_limud_demo/util/category.dart';
+import 'package:zman_limud_demo/util/general_util.dart';
+import 'package:zman_limud_demo/models/learn_time.dart';
 
-class EditMenu extends StatefulWidget {
-  const EditMenu({super.key, required this.appState, required this.learnTime});
+class EditMenu extends ConsumerStatefulWidget {
+  const EditMenu({super.key, required this.learnTime});
 
-  final AppState appState;
   final LearnTime learnTime;
 
   @override
   _EditMenuState createState() => _EditMenuState();
 }
 
-class _EditMenuState extends State<EditMenu> {
+class _EditMenuState extends ConsumerState<EditMenu> {
   late final TextEditingController _titleController =
       TextEditingController.fromValue(
     TextEditingValue(text: widget.learnTime.title),
@@ -30,8 +29,6 @@ class _EditMenuState extends State<EditMenu> {
   late TimeOfDay _pickedEndTime = widget.learnTime.endTime;
   late DateTime _pickedDate = widget.learnTime.date;
   late Category _category = widget.learnTime.category;
-  String? hourErrorText;
-  String? categoryErrorText;
 
   void _submit() async {
     bool ifReturn = false;
@@ -91,16 +88,16 @@ class _EditMenuState extends State<EditMenu> {
     if (kDebugMode) {
       print(_pickedDate);
     }
-    widget.appState.updateLearnTime(
-      LearnTime(
-        id: widget.learnTime.id,
-        title: _titleController.text,
-        startTime: _pickedStartTime,
-        endTime: _pickedEndTime,
-        date: _pickedDate,
-        category: _category,
-      ),
-    );
+    ref.read(learnTimesProvider.notifier).updateLearnTime(
+          LearnTime(
+            id: widget.learnTime.id,
+            title: _titleController.text,
+            startTime: _pickedStartTime,
+            endTime: _pickedEndTime,
+            date: _pickedDate,
+            category: _category,
+          ),
+        );
     Navigator.pop(context);
   }
 
@@ -192,7 +189,7 @@ class _EditMenuState extends State<EditMenu> {
             firstDate: DateTime(_pickedDate.year - 1),
             lastDate: DateTime.now(),
           )) ??
-          DateTime.now();
+          _pickedDate;
     }
     setState(() {});
   }
@@ -225,63 +222,31 @@ class _EditMenuState extends State<EditMenu> {
       await showMaterialHebrewDatePicker(
         context: context,
         initialDate: _pickedDate,
-        firstDate: _pickedDate.subtract(Duration(days: 30)),
+        firstDate: _pickedDate.subtract(Duration(days: 365)),
         lastDate: DateTime.now().add(Duration(days: 30)),
         hebrewFormat: true,
-        onConfirmDate: (date) {
-          setState(() => _pickedDate = date);
-        },
+        onConfirmDate: (date) => setState(() => _pickedDate = date),
         onDateChange: (DateTime value) {},
-        theme: HebrewDatePickerTheme(
-          primaryColor: Theme.of(context).colorScheme.primary,
-          onPrimaryColor: Theme.of(context).colorScheme.onPrimary,
-          surfaceColor: Theme.of(context).colorScheme.surface,
-          onSurfaceColor: Theme.of(context).colorScheme.onSurface,
-          disabledColor:
-              Theme.of(context).colorScheme.onSurface.withOpacity(0.38),
-          selectedColor: Theme.of(context).colorScheme.primary,
-          todayColor: Theme.of(context).colorScheme.primary,
-          headerTextStyle: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          bodyTextStyle: TextStyle(
-            fontSize: 14,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          weekdayTextStyle: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-        ),
+        theme: GeneralUtil.getHebrewDatePickerTheme(context),
       );
     }
   }
 
   @override
   void dispose() {
-    _titleController.dispose();
     super.dispose();
+    _titleController.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    double hourPickRowFontSize = 20;
+    final double hourPickRowFontSize = 20;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('הוסף לימוד'),
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: Theme.of(context).colorScheme.onPrimary,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+    return ClipRRect(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(16),
       ),
-      body: Padding(
+      child: Padding(
         padding: EdgeInsets.all(16),
         child: Column(
           children: [
@@ -289,9 +254,10 @@ class _EditMenuState extends State<EditMenu> {
               controller: _titleController,
               maxLength: 50,
               decoration: InputDecoration(
-                  labelText: 'כותרת',
-                  labelStyle: TextStyle()
-                      .copyWith(color: Theme.of(context).colorScheme.primary)),
+                labelText: 'כותרת',
+                labelStyle: TextStyle()
+                    .copyWith(color: Theme.of(context).colorScheme.primary),
+              ),
             ),
             Flexible(
               child: Row(
@@ -359,17 +325,8 @@ class _EditMenuState extends State<EditMenu> {
                     dropdownColor: Theme.of(context).colorScheme.surface,
                     decoration: InputDecoration(
                       labelText: 'קטגוריה',
-                      errorText: categoryErrorText,
-                      errorStyle: TextStyle(
-                        color: categoryErrorText == null
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.error,
-                      ),
                       labelStyle: TextStyle(
-                        color: categoryErrorText == null
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.error,
-                      ),
+                          color: Theme.of(context).colorScheme.primary),
                     ),
                     items: [
                       for (var category in categoryNames.keys)
@@ -379,12 +336,7 @@ class _EditMenuState extends State<EditMenu> {
                         ),
                     ],
                     onChanged: (value) {
-                      setState(() {
-                        categoryErrorText = null;
-                      });
-                      if (value is Category) {
-                        _category = value;
-                      }
+                      _category = value!;
                     },
                   ),
                 ),
@@ -457,11 +409,22 @@ class _EditMenuState extends State<EditMenu> {
             SizedBox(height: 8),
             Align(
               alignment: Alignment.centerLeft,
-              child: TextButton(
-                onPressed: () {
-                  _submit();
-                },
-                child: Text('עדכן'),
+              child: Row(
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      _submit();
+                    },
+                    child: Text('עדכן'),
+                  ),
+                  SizedBox(width: 8),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text('ביטול'),
+                  ),
+                ],
               ),
             ),
           ],

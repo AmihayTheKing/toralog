@@ -15,6 +15,11 @@ final ThemeData lightTheme = ThemeData().copyWith(
     foregroundColor: kColorScheme.onPrimary,
     actionsIconTheme: IconThemeData().copyWith(color: kColorScheme.onPrimary),
     iconTheme: IconThemeData().copyWith(color: kColorScheme.onPrimary),
+    titleTextStyle: TextStyle().copyWith(
+      color: kColorScheme.onPrimary,
+      fontSize: 20,
+      fontWeight: FontWeight.w600,
+    ),
   ),
   floatingActionButtonTheme: FloatingActionButtonThemeData().copyWith(
     backgroundColor: kColorScheme.primary,
@@ -32,7 +37,7 @@ final ThemeData lightTheme = ThemeData().copyWith(
     ),
   ),
   inputDecorationTheme: InputDecorationTheme(),
-  cardTheme: CardTheme().copyWith(
+  cardTheme: CardThemeData().copyWith(
     color: kColorScheme.surfaceContainer,
   ),
   bottomNavigationBarTheme: BottomNavigationBarThemeData().copyWith(
@@ -47,4 +52,8 @@ final ThemeData lightTheme = ThemeData().copyWith(
         color: kColorScheme.onSurface,
       ),
       actionTextColor: kColorScheme.primary),
+  textTheme: Typography.material2021().black.apply(
+        bodyColor: kColorScheme.primary,
+        displayColor: kColorScheme.primary,
+      ),
 );

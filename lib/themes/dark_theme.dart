@@ -43,7 +43,7 @@ final ThemeData darkTheme = ThemeData().copyWith(
       backgroundColor: WidgetStateProperty.all(kDarkColorScheme.surface),
     ),
   ),
-  cardTheme: CardTheme().copyWith(
+  cardTheme: CardThemeData().copyWith(
     color: kDarkColorScheme.surfaceContainer,
   ),
   bottomNavigationBarTheme: BottomNavigationBarThemeData().copyWith(
@@ -53,7 +53,7 @@ final ThemeData darkTheme = ThemeData().copyWith(
     unselectedItemColor: kDarkColorScheme.onPrimary.withOpacity(0.5),
   ),
   scaffoldBackgroundColor: kDarkColorScheme.surface,
-  textTheme: TextTheme().copyWith(),
+  textTheme: Typography.material2021().white,
   snackBarTheme: SnackBarThemeData().copyWith(
       backgroundColor: kDarkColorScheme.surface,
       contentTextStyle: TextStyle().copyWith(

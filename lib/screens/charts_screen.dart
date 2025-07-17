@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zman_limud_demo/main.dart';
 import 'package:zman_limud_demo/models/learn_times_bucket.dart';
 import 'package:zman_limud_demo/util/category.dart';
 import 'package:zman_limud_demo/util/general_util.dart';
 import 'package:zman_limud_demo/widgets/chart/multi_color_chart.dart';
 import 'package:zman_limud_demo/widgets/chart/single_color_chart.dart';
+import '../providers/learn_times_provider.dart';
 
-class ChartsScreen extends StatefulWidget {
+class ChartsScreen extends ConsumerStatefulWidget {
   const ChartsScreen({super.key, required this.appState});
 
   final AppState appState;
@@ -15,7 +17,7 @@ class ChartsScreen extends StatefulWidget {
   _ChartsScreenState createState() => _ChartsScreenState();
 }
 
-class _ChartsScreenState extends State<ChartsScreen> {
+class _ChartsScreenState extends ConsumerState<ChartsScreen> {
   int weekDifference = 0;
   DateTime _dateOfDisplayedData = DateTime.now();
   Category _categoryOfDisplayedData = Category.other;
@@ -27,17 +29,30 @@ class _ChartsScreenState extends State<ChartsScreen> {
       Duration(days: date.weekday == 7 ? 0 : date.weekday),
     );
 
-    Map<DateTime, LearnTimesBucket<DateTime>> map = {};
+    Map<DateTime, LearnTimesBucket<DateTime>> returnedMap = {};
     for (var i = 0; i <= 6; i++) {
       DateTime currentDate = startOfWeek.copyWith(day: startOfWeek.day + i);
 
-      map[currentDate.onlyDate] = LearnTimesBucket<DateTime>.fromList(
-        allLearnTimes: widget.appState.widget.learnTimes,
+      returnedMap[currentDate.onlyDate] = LearnTimesBucket<DateTime>.fromList(
+        allLearnTimes: ref.read(learnTimesProvider),
         countedThing: currentDate.onlyDate,
         filter: (learnTime) => learnTime.date.isSameDate(currentDate),
       );
     }
-    return map;
+    return returnedMap;
+  }
+
+  Map<Category, LearnTimesBucket<Category>> get categoryBuckets {
+    return Category.values.asMap().map(
+          (index, category) => MapEntry(
+            category,
+            LearnTimesBucket<Category>.fromList(
+              allLearnTimes: ref.watch(learnTimesProvider),
+              countedThing: category,
+              filter: (learnTime) => learnTime.category == category,
+            ),
+          ),
+        );
   }
 
   void changeDateChartData(
@@ -71,7 +86,6 @@ class _ChartsScreenState extends State<ChartsScreen> {
 
   @override
   void initState() {
-    super.initState();
     _currentShownDayBuckets.addAll(
       getInnerBuckets(
         _currentWeekBucket(DateTime.now())[DateTime.now().onlyDate]!,
@@ -79,11 +93,7 @@ class _ChartsScreenState extends State<ChartsScreen> {
     );
     displayHorizontalLine =
         _currentShownDayBuckets.any((bucket) => bucket.amount > 0);
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
+    super.initState();
   }
 
   @override
@@ -104,10 +114,7 @@ class _ChartsScreenState extends State<ChartsScreen> {
                     child: Align(
                       alignment: Alignment.centerRight,
                       child: Text(
-                        widget
-                            .appState
-                            .widget
-                            .categoryBuckets[_categoryOfDisplayedData]!
+                        categoryBuckets[_categoryOfDisplayedData]!
                             .formattedAmount,
                         style: TextStyle(
                             fontSize: 20, fontWeight: FontWeight.bold),
@@ -117,9 +124,7 @@ class _ChartsScreenState extends State<ChartsScreen> {
                   ),
                   SingleColorChart(
                     onBarTap: changeCategoryChartData,
-                    buckets:
-                        widget.appState.widget.categoryBuckets.values.toList(),
-                    dateType: widget.appState.dateType,
+                    buckets: categoryBuckets.values.toList(),
                   ),
                 ],
               ),
@@ -152,9 +157,10 @@ class _ChartsScreenState extends State<ChartsScreen> {
                         itemBuilder: (context, index) => MultiColorChart(
                           onBarTap: changeDateChartData,
                           buckets: _currentWeekBucket(
-                            DateTime.now().add(Duration(days: (-index) * 7)),
+                            DateTime.now().add(
+                              Duration(days: (-index) * 7),
+                            ),
                           ).values.toList(),
-                          dateType: widget.appState.dateType,
                         ),
                       ),
                     ),

@@ -1,100 +1,58 @@
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:zman_limud_demo/data/learn_times.dart';
-import 'package:zman_limud_demo/models/learn_times_bucket.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zman_limud_demo/providers/learn_times_provider.dart';
 import 'package:zman_limud_demo/screens/settings_screen.dart';
 import 'package:zman_limud_demo/themes/dark_theme.dart';
-import 'package:zman_limud_demo/util/general_util.dart';
 import 'package:zman_limud_demo/widgets/add_menu.dart';
 import 'package:zman_limud_demo/widgets/edit_menu.dart';
 import 'package:zman_limud_demo/screens/charts_screen.dart';
 import 'package:zman_limud_demo/models/learn_time.dart';
 import 'package:zman_limud_demo/screens/cards_screen.dart';
 import 'package:zman_limud_demo/themes/light_theme.dart';
-import 'package:zman_limud_demo/util/category.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations(
       [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]).then(
     (fn) => runApp(
-      MaterialApp(
-        theme: lightTheme,
-        darkTheme: darkTheme,
-        debugShowCheckedModeBanner: false,
-        home: App(),
+      ProviderScope(
+        child: MaterialApp(
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          debugShowCheckedModeBanner: false,
+          home: App(),
+        ),
       ),
     ),
   );
 }
 
-class App extends StatefulWidget {
-  App({super.key});
-
-  List<LearnTime> learnTimes = [];
-  Map<Category, LearnTimesBucket<Category>> categoryBuckets = Map.fromIterable(
-      Category.values,
-      value: (category) => LearnTimesBucket<Category>(countedThing: category));
+class App extends ConsumerStatefulWidget {
+  const App({super.key});
 
   @override
-  State<App> createState() => AppState();
+  ConsumerState<App> createState() => AppState();
 }
 
-class AppState extends State<App> {
+class AppState extends ConsumerState<App> {
   int _currentScreenIndex = 0;
-  DateType dateType = DateType.jewish;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadLearnTimes();
-  }
+  late Future loadLearnTimesFuture;
 
   // Load learn times from database when app starts
-  Future<void> _loadLearnTimes() async {
-    try {
-      final savedLearnTimes = await LearnTimeDatabase().readAllLearnTimes();
-      setState(() {
-        widget.learnTimes = savedLearnTimes;
-        // Rebuild category and date buckets
-        widget.categoryBuckets = Map.fromIterable(
-          Category.values,
-          value: (category) =>
-              LearnTimesBucket<Category>(countedThing: category),
-        );
 
-        for (var element in widget.learnTimes) {
-          widget.categoryBuckets[element.category]?.addLearnTime(element);
-        }
-      });
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error loading learn times: $e');
-      }
-      // Optionally show an error to the user
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load learn times')),
-      );
-    }
-  }
-
-  void _openSettings() async {
-    dateType = await Navigator.of(context).push(
+  void _openSettings() {
+    Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => SettingsScreen(
-          selectedDateType: dateType,
-        ),
+        builder: (context) => SettingsScreen(),
       ),
     );
-    setState(() {});
   }
 
   void openEditMenu(LearnTime learnTime) {
     showModalBottomSheet(
       context: context,
       builder: (ctx) => EditMenu(
-        appState: this,
         learnTime: learnTime,
       ),
       isScrollControlled: true,
@@ -105,145 +63,25 @@ class AppState extends State<App> {
     );
   }
 
-  void removeLearnTime(LearnTime learnTime) async {
-    try {
-      // Delete from database
-      await LearnTimeDatabase().delete(learnTime);
-
-      setState(() {
-        widget.learnTimes.remove(learnTime);
-        widget.categoryBuckets[learnTime.category]?.removeLearnTime(learnTime);
-      });
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          duration: Duration(seconds: 4),
-          content: Text('הלימוד ${learnTime.title} נמחק בהצלחה'),
-          action: SnackBarAction(
-            label: 'ביטול',
-            onPressed: () {
-              setState(() {
-                addLearnTime(learnTime);
-              });
-              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-            },
-          ),
-        ),
-      );
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error removing learn time: $e');
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete learn time')),
-      );
-    }
-  }
-
-  void addLearnTime(LearnTime learnTime) async {
-    try {
-      await LearnTimeDatabase().create(learnTime);
-
-      setState(() {
-        widget.learnTimes.add(learnTime);
-        widget.learnTimes.sort((a, b) => b.date.compareTo(a.date));
-        widget.categoryBuckets[learnTime.category]?.addLearnTime(learnTime);
-      });
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error adding learn time: $e');
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save learn time')),
-      );
-    }
-  }
-
-  void updateLearnTime(LearnTime learnTime) async {
-    try {
-      await LearnTimeDatabase().update(learnTime);
-
-      setState(() {
-        widget.learnTimes[widget.learnTimes.indexOf(learnTime)] = learnTime;
-        widget.learnTimes.sort((a, b) => b.date.compareTo(a.date));
-        widget.categoryBuckets[learnTime.category]!.updateLearnTime(learnTime);
-      });
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error updating learn time: $e');
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update learn time')),
-      );
-    }
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    loadLearnTimesFuture =
+        ref.read(learnTimesProvider.notifier).loadLearnTimes();
     return Scaffold(
       appBar: AppBar(
-        title: Align(
-          alignment: Alignment.centerRight,
-          child: const Text('זמן לימוד'),
-        ),
+        title: const Text('זמן לימוד'),
+        centerTitle: true,
         leadingWidth: 100,
         leading: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           mainAxisSize: MainAxisSize.max,
           textDirection: TextDirection.rtl,
           children: [
-            /*Padding(
-              padding: const EdgeInsets.only(left: 15),
-              child: InkWell(
-                overlayColor: WidgetStatePropertyAll(Colors.transparent),
-                onTap: () {
-                  setState(() {
-                    dateType = dateType == DateType.gregorian
-                        ? DateType.jewish
-                        : DateType.gregorian;
-                  });
-                },
-                child: dateType == DateType.gregorian
-                    ? Stack(
-                        alignment: Alignment.lerp(Alignment.center,
-                                Alignment.bottomCenter, 0.5) ??
-                            Alignment.center,
-                        children: [
-                          Icon(
-                            Icons.calendar_today,
-                            color: Theme.of(context).colorScheme.onPrimary,
-                            size: 30,
-                          ),
-                          Text(
-                            'א',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onPrimary,
-                            ),
-                          ),
-                        ],
-                      )
-                    : Stack(
-                        alignment: Alignment.lerp(Alignment.center,
-                                Alignment.bottomCenter, 0.8) ??
-                            Alignment.center,
-                        children: [
-                          Icon(
-                            Icons.calendar_today,
-                            color: Theme.of(context).colorScheme.onPrimary,
-                            size: 30,
-                          ),
-                          Text(
-                            '1',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-              ),
-            ),*/
             IconButton(
               icon: Icon(
                 Icons.settings_rounded,
@@ -260,22 +98,24 @@ class AppState extends State<App> {
               appState: this,
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => showModalBottomSheet(
-          context: context,
-          builder: (ctx) => AddMenu(appState: this),
-          isScrollControlled: true,
-          useSafeArea: true,
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.85,
-          ),
-        ),
+        onPressed: () {
+          showModalBottomSheet<LearnTime>(
+            context: context,
+            builder: (ctx) => AddMenu(),
+            isScrollControlled: true,
+            useSafeArea: true,
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.85,
+            ),
+          );
+        },
         child: const Icon(Icons.add),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.table_rows_rounded),
-            label: 'זמני לימוד',
+            label: 'כרטיסיות',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.bar_chart_rounded),

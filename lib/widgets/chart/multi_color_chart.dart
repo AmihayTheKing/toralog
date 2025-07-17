@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kosher_dart/kosher_dart.dart';
+import 'package:zman_limud_demo/providers/date_type_provider.dart';
 import 'package:zman_limud_demo/util/category.dart';
 import 'package:zman_limud_demo/util/general_util.dart';
 import 'package:zman_limud_demo/widgets/chart/multi_color_chart_bar.dart';
 import 'package:zman_limud_demo/models/learn_times_bucket.dart';
 
-class MultiColorChart extends StatelessWidget {
+class MultiColorChart extends ConsumerWidget {
   const MultiColorChart(
-      {super.key,
-      required this.buckets,
-      required this.dateType,
-      required this.onBarTap});
+      {super.key, required this.buckets, required this.onBarTap});
 
   final List<LearnTimesBucket<DateTime>> buckets;
-  final DateType dateType;
   final void Function(DateTime, List<LearnTimesBucket<Category>>) onBarTap;
 
   double get maxTotalExpense {
@@ -60,7 +58,7 @@ class MultiColorChart extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.symmetric(
         vertical: 16,
@@ -89,7 +87,7 @@ class MultiColorChart extends StatelessWidget {
                           : bucket.amount / maxTotalExpense,
                     ),
                     SizedBox(height: 8),
-                    dateType == DateType.jewish
+                    ref.watch(dateTypeProvider) == DateType.jewish
                         ? Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 1),
                             child: Text(

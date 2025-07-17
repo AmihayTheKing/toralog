@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zman_limud_demo/providers/date_type_provider.dart';
 import 'package:zman_limud_demo/util/category.dart';
 import 'package:zman_limud_demo/models/learn_time.dart';
-import 'package:zman_limud_demo/util/general_util.dart';
 
-class LearnTimeCard extends StatelessWidget {
+class LearnTimeCard extends ConsumerWidget {
   final LearnTime learnTime;
-  final DateType dateType;
-  final Function(LearnTime) editFunction;
+  final Function(LearnTime) editButtonFunction;
 
   const LearnTimeCard({
     super.key,
     required this.learnTime,
-    required this.dateType,
-    required this.editFunction,
+    required this.editButtonFunction,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+
     return Card.filled(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -28,19 +29,19 @@ class LearnTimeCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     learnTime.title,
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
                 Spacer(),
                 IconButton(
                   icon: Icon(
                     Icons.edit,
-                    color: Theme.of(context).colorScheme.brightness ==
-                            Brightness.dark
-                        ? Colors.white
-                        : Colors.black,
+                    color: theme.textTheme.bodyMedium?.color,
                   ),
-                  onPressed: () => editFunction(learnTime),
+                  onPressed: () => editButtonFunction(learnTime),
                 ),
               ],
             ),
@@ -49,21 +50,24 @@ class LearnTimeCard extends StatelessWidget {
               children: [
                 Text(
                   learnTime.endTime.format(context),
-                  style: TextStyle(fontSize: 17),
+                  style: theme.textTheme.bodyMedium?.copyWith(fontSize: 17),
                 ),
                 SizedBox(width: 4),
-                Text('\u2014'),
+                Text(
+                  '\u2014',
+                  style: theme.textTheme.bodyMedium?.copyWith(fontSize: 17),
+                ),
                 SizedBox(width: 4),
                 Text(
                   learnTime.startTime.format(context),
-                  style: TextStyle(fontSize: 17),
+                  style: theme.textTheme.bodyMedium?.copyWith(fontSize: 17),
                 ),
                 Spacer(),
                 Text(
-                  dateType == DateType.jewish
+                  ref.watch(dateTypeProvider) == DateType.jewish
                       ? learnTime.jewishFormattedDate
                       : learnTime.formattedDate,
-                  style: TextStyle(fontSize: 16),
+                  style: theme.textTheme.bodySmall?.copyWith(fontSize: 16),
                   textDirection: TextDirection.ltr,
                 ),
               ],
@@ -73,7 +77,10 @@ class LearnTimeCard extends StatelessWidget {
               children: [
                 Text(
                   learnTime.formattedHours,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                   textDirection: TextDirection.rtl,
                 ),
                 Spacer(),
@@ -85,7 +92,10 @@ class LearnTimeCard extends StatelessWidget {
                   ),
                   child: Text(
                     categoryNames[learnTime.category]!,
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],

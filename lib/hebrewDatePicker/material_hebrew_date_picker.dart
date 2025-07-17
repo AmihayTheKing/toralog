@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:kosher_dart/kosher_dart.dart';
 
-import 'theme.dart';
+import 'hebrew_date_picker_theme.dart';
 
 // Base class for shared functionality
 abstract class HebrewDatePickerBase extends StatefulWidget {
   final DateTime firstDate;
+  final DateTime initialDate;
   final DateTime lastDate;
   final bool hebrewFormat;
   final HebrewDatePickerTheme? theme;
@@ -14,6 +15,7 @@ abstract class HebrewDatePickerBase extends StatefulWidget {
     super.key,
     required this.firstDate,
     required this.lastDate,
+    required this.initialDate,
     this.hebrewFormat = true,
     this.theme,
   });
@@ -33,11 +35,12 @@ abstract class HebrewDatePickerBaseState<T extends HebrewDatePickerBase>
   @override
   void initState() {
     super.initState();
-    _displayedMonth = JewishDate.fromDateTime(widget.firstDate);
+    _displayedMonth = JewishDate.fromDateTime(widget.initialDate);
     _formatter = HebrewDateFormatter()..hebrewFormat = widget.hebrewFormat;
     _totalMonths = _monthsBetween(JewishDate.fromDateTime(widget.firstDate),
         JewishDate.fromDateTime(widget.lastDate));
-    _currentPage = 0;
+    _currentPage = _monthsBetween(JewishDate.fromDateTime(widget.firstDate),
+        JewishDate.fromDateTime(widget.initialDate));
     _pageController = PageController(initialPage: _currentPage);
   }
 
@@ -151,7 +154,11 @@ abstract class HebrewDatePickerBaseState<T extends HebrewDatePickerBase>
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            '${_getHebrewMonthName(_displayedMonth.getJewishMonth())} ${widget.hebrewFormat ? _formatter.formatHebrewNumber(_displayedMonth.getJewishYear()) : _displayedMonth.getJewishYear()}',
+            '${_getHebrewMonthName(
+              _displayedMonth.getJewishMonth(),
+            )} ${widget.hebrewFormat ? _formatter.formatHebrewNumber(
+                _displayedMonth.getJewishYear(),
+              ) : _displayedMonth.getJewishYear()}',
             style: theme.bodyTextStyle.copyWith(
               fontWeight: FontWeight.bold,
               color: theme.primaryColor,
@@ -241,13 +248,12 @@ abstract class HebrewDatePickerBaseState<T extends HebrewDatePickerBase>
 }
 
 class MaterialHebrewDatePicker extends HebrewDatePickerBase {
-  final DateTime initialDate;
   final ValueChanged<DateTime> onDateChange;
   final ValueChanged<DateTime> onConfirmDate;
 
   const MaterialHebrewDatePicker({
     Key? key,
-    required this.initialDate,
+    required DateTime initialDate,
     required DateTime firstDate,
     required DateTime lastDate,
     required this.onDateChange,
@@ -255,6 +261,7 @@ class MaterialHebrewDatePicker extends HebrewDatePickerBase {
     bool hebrewFormat = true,
     HebrewDatePickerTheme? theme,
   }) : super(
+            initialDate: initialDate,
             key: key,
             firstDate: firstDate,
             lastDate: lastDate,
@@ -498,6 +505,7 @@ class HebrewDateRangePicker extends HebrewDatePickerBase {
     bool hebrewFormat = true,
     HebrewDatePickerTheme? theme,
   }) : super(
+            initialDate: initialStartDate ?? firstDate,
             key: key,
             firstDate: firstDate,
             lastDate: lastDate,

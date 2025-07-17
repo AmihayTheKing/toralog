@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:zman_limud_demo/util/general_util.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zman_limud_demo/widgets/chart/single_color_chart_bar.dart';
 import 'package:zman_limud_demo/models/learn_times_bucket.dart';
 import 'package:zman_limud_demo/util/category.dart';
 
-class SingleColorChart extends StatelessWidget {
+class SingleColorChart extends ConsumerWidget {
   const SingleColorChart(
-      {super.key,
-      required this.buckets,
-      required this.dateType,
-      required this.onBarTap});
+      {super.key, required this.buckets, required this.onBarTap});
 
   final List<LearnTimesBucket<Category>> buckets;
-  final DateType dateType;
   final void Function(Category) onBarTap;
 
   double get maxTotalExpense {
@@ -28,7 +24,7 @@ class SingleColorChart extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.symmetric(
         vertical: 16,
