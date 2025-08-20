@@ -7,6 +7,7 @@ class LearnTimesNotifier extends StateNotifier<List<LearnTime>> {
   LearnTimesNotifier() : super([]);
 
   Future<void> loadLearnTimes() async {
+    // the loading done manually from the main.dart to track the futere
     state = await LearnTimeDatabase().readAllLearnTimes();
   }
 

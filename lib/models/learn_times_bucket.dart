@@ -3,16 +3,16 @@ import 'package:zman_limud_demo/util/general_util.dart';
 
 class LearnTimesBucket<T> {
   LearnTimesBucket({
-    required this.countedThing,
+    required this.whatIsCounted,
   });
 
   LearnTimesBucket.fromList(
       {required List<LearnTime> allLearnTimes,
-      required this.countedThing,
+      required this.whatIsCounted,
       required bool Function(LearnTime) filter})
       : learnTimes = allLearnTimes.where(filter).toList();
 
-  final T countedThing;
+  final T whatIsCounted;
   List<LearnTime> learnTimes = [];
 
   double get amount {

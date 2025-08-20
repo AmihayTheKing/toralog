@@ -1,11 +1,10 @@
 import 'dart:io';
+import 'package:cupertino_hebrew_date_picker/cupertino_hebrew_date_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kosher_dart/kosher_dart.dart';
-import 'package:zman_limud_demo/hebrewDatePicker/cupertino_hebrew_date_picker.dart';
-import 'package:zman_limud_demo/hebrewDatePicker/material_hebrew_date_picker.dart';
-import 'package:zman_limud_demo/hebrewDatePicker/hebrew_date_picker_theme.dart';
+import 'package:material_hebrew_date_picker/material_hebrew_date_picker.dart';
 import 'package:zman_limud_demo/util/category.dart';
 import 'package:zman_limud_demo/models/learn_time.dart';
 import 'package:zman_limud_demo/util/general_util.dart';
@@ -19,14 +18,15 @@ class AddMenu extends ConsumerStatefulWidget {
 }
 
 class _AddMenuState extends ConsumerState<AddMenu> {
-  final TextEditingController _titleController = TextEditingController();
-  TimeOfDay _pickedStartTime = TimeOfDay(
-      hour: TimeOfDay.now().hour > 0 ? TimeOfDay.now().hour - 1 : 23,
-      minute: TimeOfDay.now().minute);
+  final _titleController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  TimeOfDay _pickedStartTime = TimeOfDay.now()
+      .copyWith(hour: TimeOfDay.now().hour > 0 ? TimeOfDay.now().hour - 1 : 23);
   TimeOfDay _pickedEndTime = TimeOfDay.now();
   DateTime _pickedDate = DateTime.now();
-  Category? _category;
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  Category? _pickedCategory;
+  late double hourPickRowFontSize;
 
   void _submit() async {
     bool ifReturn = false;
@@ -37,18 +37,18 @@ class _AddMenuState extends ConsumerState<AddMenu> {
     if (_titleController.text.isEmpty) {
       await showDialog(
         context: context,
-        builder: (ctx) => AlertDialog(
+        builder: (context) => AlertDialog(
           content: Text('אתה בטוח שאתה לא רוצה להוסיף כותרת?'),
           actions: [
             TextButton(
               onPressed: () {
                 ifReturn = true;
-                Navigator.pop(ctx);
+                Navigator.pop(context);
               },
               child: Text('בטל'),
             ),
             TextButton(
-              onPressed: () => Navigator.pop(ctx),
+              onPressed: () => Navigator.pop(context),
               child: Text('אישור'),
             ),
           ],
@@ -65,19 +65,43 @@ class _AddMenuState extends ConsumerState<AddMenu> {
             startTime: _pickedStartTime,
             endTime: _pickedEndTime,
             date: _pickedDate,
-            category: _category!,
+            category: _pickedCategory!,
           ),
         );
     Navigator.pop(context);
   }
 
   void _chooseStartTime() async {
-    _pickedStartTime = await showTimePicker(
-          context: context,
-          initialTime: _pickedStartTime,
-        ) ??
-        _pickedStartTime;
-    setState(() {});
+    if (Platform.isIOS) {
+      await showCupertinoModalPopup(
+        context: context,
+        builder: (context) => SizedBox(
+          height: getAdaptiveHeight(context, 200),
+          child: CupertinoDatePicker(
+            mode: CupertinoDatePickerMode.time,
+            initialDateTime: DateTime(
+              DateTime.now().year,
+              DateTime.now().month,
+              DateTime.now().day,
+              _pickedStartTime.hour,
+              _pickedStartTime.minute,
+            ),
+            use24hFormat: true,
+            onDateTimeChanged: (DateTime value) {
+              _pickedStartTime = TimeOfDay.fromDateTime(value);
+              setState(() {});
+            },
+          ),
+        ),
+      );
+    } else {
+      _pickedStartTime = await showTimePicker(
+            context: context,
+            initialTime: _pickedStartTime,
+          ) ??
+          _pickedStartTime;
+      setState(() {});
+    }
   }
 
   void _chooseEndTime() async {
@@ -85,7 +109,7 @@ class _AddMenuState extends ConsumerState<AddMenu> {
       await showCupertinoModalPopup(
         context: context,
         builder: (context) => SizedBox(
-          height: 200,
+          height: getAdaptiveHeight(context, 200),
           child: CupertinoDatePicker(
             mode: CupertinoDatePickerMode.time,
             initialDateTime: DateTime.now(),
@@ -110,23 +134,25 @@ class _AddMenuState extends ConsumerState<AddMenu> {
 
   void _chooseDateGregorian() async {
     if (Platform.isIOS) {
-      (await showCupertinoModalPopup(
-        context: context,
-        builder: (context) => SizedBox(
-          height: 200,
-          child: CupertinoDatePicker(
-            mode: CupertinoDatePickerMode.date,
-            initialDateTime: _pickedDate,
-            minimumDate: DateTime(DateTime.now().year - 1),
-            maximumDate: DateTime.now(),
-            onDateTimeChanged: (DateTime value) {
-              setState(
-                () => _pickedDate = value,
-              );
-            },
+      (
+        await showCupertinoModalPopup(
+          context: context,
+          builder: (context) => SizedBox(
+            height: getAdaptiveHeight(context, 200),
+            child: CupertinoDatePicker(
+              mode: CupertinoDatePickerMode.date,
+              initialDateTime: _pickedDate,
+              minimumDate: DateTime(DateTime.now().year - 1),
+              maximumDate: DateTime.now(),
+              onDateTimeChanged: (DateTime value) {
+                setState(
+                  () => _pickedDate = value,
+                );
+              },
+            ),
           ),
         ),
-      ));
+      );
     } else {
       _pickedDate = (await showDatePicker(
             context: context,
@@ -144,7 +170,7 @@ class _AddMenuState extends ConsumerState<AddMenu> {
       await showCupertinoModalPopup(
         context: context,
         builder: (context) => SizedBox(
-          height: 200,
+          height: getAdaptiveHeight(context, 200),
           child: CupertinoHebrewDatePicker(
             context: context,
             onDateChanged: (DateTime value) => _pickedDate = value,
@@ -170,33 +196,197 @@ class _AddMenuState extends ConsumerState<AddMenu> {
       firstDate: DateTime.now().subtract(Duration(days: 365)),
       lastDate: DateTime.now().add(Duration(days: 30)),
       hebrewFormat: true,
-      onConfirmDate: (date) {
+      onDateChange: (date) {
         setState(() => _pickedDate = date);
       },
-      onDateChange: (DateTime value) {},
-      theme: HebrewDatePickerTheme(
-        primaryColor: Theme.of(context).colorScheme.primary,
-        onPrimaryColor: Theme.of(context).colorScheme.onPrimary,
-        surfaceColor: Theme.of(context).colorScheme.surface,
-        onSurfaceColor: Theme.of(context).colorScheme.onSurface,
-        disabledColor:
-            Theme.of(context).colorScheme.onSurface.withOpacity(0.38),
-        selectedColor: Theme.of(context).colorScheme.primary,
-        todayColor: Theme.of(context).colorScheme.primary,
-        headerTextStyle: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.primary,
+      theme: getHebrewDatePickerTheme(context),
+    );
+  }
+
+  Widget _createChoosingTitleRow() {
+    return TextFormField(
+      controller: _titleController,
+      maxLength: 50,
+      decoration: InputDecoration(
+          labelText: 'כותרת',
+          labelStyle: TextStyle()
+              .copyWith(color: Theme.of(context).colorScheme.primary)),
+    );
+  }
+
+  Widget _createChoosingTimeRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        TextButton(
+          onPressed: _chooseEndTime,
+          style: ButtonStyle(
+            padding: MaterialStateProperty.all(
+              EdgeInsets.zero,
+            ),
+          ),
+          child: Text(
+            _pickedEndTime.format(context),
+            style: TextStyle().copyWith(fontSize: hourPickRowFontSize),
+          ),
         ),
-        bodyTextStyle: TextStyle(
-          fontSize: 14,
-          color: Theme.of(context).colorScheme.primary,
+        Text(
+          'עד שעה:',
+          style: TextStyle(
+              fontSize: hourPickRowFontSize,
+              color: Theme.of(context).colorScheme.primary),
+          textDirection: TextDirection.rtl,
         ),
-        weekdayTextStyle: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.primary,
+        SizedBox(width: getAdaptiveWidth(context, 6)),
+        Text(
+          '\u2014', // -
+          style: TextStyle(
+            fontSize: hourPickRowFontSize,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
+        SizedBox(width: getAdaptiveWidth(context, 6)),
+        TextButton(
+          onPressed: _chooseStartTime,
+          style: ButtonStyle(
+            padding: MaterialStateProperty.all(
+              EdgeInsets.zero,
+            ),
+          ),
+          child: Text(
+            _pickedStartTime.format(context),
+            style: TextStyle().copyWith(fontSize: hourPickRowFontSize),
+          ),
+        ),
+        Text(
+          'משעה:',
+          style: TextStyle(
+              fontSize: hourPickRowFontSize,
+              color: Theme.of(context).colorScheme.primary),
+          textDirection: TextDirection.rtl,
+        ),
+      ],
+    );
+  }
+
+  Widget _createChoosingCategoryAndDateRow() {
+    return Row(
+      children: [
+        Expanded(
+          child: DropdownButtonFormField(
+            dropdownColor: Theme.of(context).colorScheme.surface,
+            decoration: InputDecoration(
+              labelText: 'קטגוריה',
+            ),
+            validator: (value) {
+              if (value == null) {
+                return 'נא לבחור קטגוריה';
+              }
+              return null;
+            },
+            items: [
+              for (var category in categoryNames.keys)
+                DropdownMenuItem(
+                  value: category,
+                  child: Text(categoryNames[category]!),
+                ),
+            ],
+            onChanged: (value) {
+              _pickedCategory = value;
+            },
+          ),
+        ),
+        SizedBox(width: getAdaptiveWidth(context, 8)),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              jewishDateFormat.format(JewishDate.fromDateTime(_pickedDate)),
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            ),
+            Text(
+              dateFormat.format(_pickedDate),
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            ),
+          ],
+        ),
+        IconButton(
+          padding: EdgeInsets.zero,
+          iconSize: getAdaptiveHeight(context, 30),
+          icon: Stack(
+            children: [
+              Positioned(
+                child: Icon(
+                  Icons.calendar_today,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              Positioned(
+                top: getAdaptiveHeight(context, 6),
+                left: getAdaptiveWidth(context, 10),
+                child: Text(
+                  'א',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          onPressed: _chooseDateJewish,
+        ),
+        IconButton(
+          padding: EdgeInsets.zero,
+          iconSize: getAdaptiveHeight(context, 30),
+          icon: Stack(
+            children: [
+              Positioned(
+                child: Icon(
+                  Icons.calendar_today,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              Positioned(
+                top: getAdaptiveHeight(context, 7),
+                left: getAdaptiveWidth(context, 11),
+                child: Text(
+                  '1',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                    fontSize: getAdaptiveHeight(context, 13.5),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          onPressed: _chooseDateGregorian,
+        ),
+      ],
+    );
+  }
+
+  Widget _createSubmitButtonsRow() {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Row(
+        children: [
+          TextButton(
+            onPressed: () {
+              _submit();
+            },
+            child: Text('הוסף'),
+          ),
+          SizedBox(width: getAdaptiveWidth(context, 8)),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('ביטול'),
+          ),
+        ],
       ),
     );
   }
@@ -208,194 +398,25 @@ class _AddMenuState extends ConsumerState<AddMenu> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    double hourPickRowFontSize = 20;
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    hourPickRowFontSize = getAdaptiveHeight(context, 20);
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Form(
       key: _formKey,
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(getAdaptiveHeight(context, 16)),
         child: Column(
           children: [
-            TextFormField(
-              controller: _titleController,
-              maxLength: 50,
-              decoration: InputDecoration(
-                  labelText: 'כותרת',
-                  labelStyle: TextStyle()
-                      .copyWith(color: Theme.of(context).colorScheme.primary)),
-            ),
-            Flexible(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TextButton(
-                    onPressed: _chooseEndTime,
-                    style: ButtonStyle(
-                      padding: MaterialStateProperty.all(
-                        EdgeInsets.all(0),
-                      ),
-                    ),
-                    child: Text(
-                      _pickedEndTime.format(context),
-                      style:
-                          TextStyle().copyWith(fontSize: hourPickRowFontSize),
-                    ),
-                  ),
-                  Text(
-                    'עד שעה:',
-                    style: TextStyle(
-                        fontSize: hourPickRowFontSize,
-                        color: Theme.of(context).colorScheme.primary),
-                    textDirection: TextDirection.rtl,
-                  ),
-                  SizedBox(width: 6),
-                  Text(
-                    '\u2014', // -
-                    style: TextStyle(
-                      fontSize: hourPickRowFontSize,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  SizedBox(width: 6),
-                  TextButton(
-                    onPressed: _chooseStartTime,
-                    style: ButtonStyle(
-                      padding: MaterialStateProperty.all(
-                        EdgeInsets.all(0),
-                      ),
-                    ),
-                    child: Text(
-                      _pickedStartTime.format(context),
-                      style:
-                          TextStyle().copyWith(fontSize: hourPickRowFontSize),
-                    ),
-                  ),
-                  Text(
-                    'משעה:',
-                    style: TextStyle(
-                        fontSize: hourPickRowFontSize,
-                        color: Theme.of(context).colorScheme.primary),
-                    textDirection: TextDirection.rtl,
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField(
-                    dropdownColor: Theme.of(context).colorScheme.surface,
-                    decoration: InputDecoration(
-                      labelText: 'קטגוריה',
-                    ),
-                    validator: (value) {
-                      if (value == null) {
-                        return 'נא לבחור קטגוריה';
-                      }
-                      return null;
-                    },
-                    items: [
-                      for (var category in categoryNames.keys)
-                        DropdownMenuItem(
-                          value: category,
-                          child: Text(categoryNames[category]!),
-                        ),
-                    ],
-                    onChanged: (value) {
-                      _category = value;
-                    },
-                  ),
-                ),
-                SizedBox(width: 8),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      jewishDateFormat
-                          .format(JewishDate.fromDateTime(_pickedDate)),
-                      style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary),
-                    ),
-                    Text(
-                      dateFormat.format(_pickedDate),
-                      style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary),
-                    ),
-                  ],
-                ),
-                IconButton(
-                  padding: EdgeInsets.all(0),
-                  iconSize: 30,
-                  icon: Stack(
-                    alignment: Alignment.lerp(
-                            Alignment.center, Alignment.bottomCenter, 0.5) ??
-                        Alignment.center,
-                    children: [
-                      Icon(
-                        Icons.calendar_today,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      Text(
-                        'א',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  onPressed: _chooseDateJewish,
-                ),
-                IconButton(
-                  padding: EdgeInsets.all(0),
-                  iconSize: 30,
-                  icon: Stack(
-                    alignment: Alignment.lerp(
-                            Alignment.center, Alignment.bottomCenter, 0.65) ??
-                        Alignment.center,
-                    children: [
-                      Icon(
-                        Icons.calendar_today,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      Text(
-                        '1',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                          fontSize: 13.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                  onPressed: _chooseDateGregorian,
-                ),
-              ],
-            ),
-            SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Row(
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      _submit();
-                    },
-                    child: Text('הוסף'),
-                  ),
-                  SizedBox(width: 8),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: Text('ביטול'),
-                  ),
-                ],
-              ),
-            ),
+            _createChoosingTitleRow(),
+            Flexible(child: _createChoosingTimeRow()),
+            SizedBox(height: getAdaptiveHeight(context, 8)),
+            _createChoosingCategoryAndDateRow(),
+            SizedBox(height: getAdaptiveHeight(context, 8)),
+            _createSubmitButtonsRow(),
           ],
         ),
       ),
