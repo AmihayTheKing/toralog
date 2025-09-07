@@ -1,4 +1,4 @@
-package com.example.zman_limud_demo
+package com.company.zman_limud
 
 import io.flutter.embedding.android.FlutterActivity
 
